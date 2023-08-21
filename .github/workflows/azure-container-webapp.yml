@@ -1,0 +1,46 @@
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+env:
+  acrName: "oleksiitrainingacr"
+  acrUrl: "oleksiitrainingacr.azurecr.io"
+
+name: Azure ARM
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+
+    - uses: actions/checkout@v3
+
+    - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Run ARM deploy
+      uses: azure/arm-deploy@v1
+      id: acrdeploy
+      with:
+        subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION }}
+        resourceGroupName: ${{ secrets.AZURE_RG }}
+        template: ./acr.json
+        parameters: acr.params.json
+
+    - name: Build, tag, and push image to Azure Container Registry
+      id: buildimage
+      run: |
+        az acr build -f Dockerfile -r $acrName -t nginx/hello:${{ github.sha }} .
+
+    - name: Run ARM deploy for ACI
+      uses: azure/arm-deploy@v1
+      id: acideploy
+      with:
+        subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION }}
+        resourceGroupName: ${{ secrets.AZURE_RG }}
+        template: ./aci.json
+        parameters:
+          containerRegistryName=${{ env.acrName }}
+          containerImage=${{ env.acrUrl }}/nginx/hello:${{ github.sha }}
