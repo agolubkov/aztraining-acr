@@ -7,7 +7,7 @@
             "metadata": {
                 "description": "container instance name"
             },
-            "defaultValue": "oleksiitrainingaci"
+            "defaultValue": "training-aci"
         },
         "containerName": {
             "type": "string",
@@ -28,7 +28,7 @@
             "metadata": {
                 "description": "dns lable"
             },
-            "defaultValue": "training-aci"
+            "defaultValue": "oleksii-training-aci"
         },
         "restartPolicy": {
             "type": "string",
